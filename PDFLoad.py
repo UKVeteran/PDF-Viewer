@@ -26,19 +26,12 @@ class PDFViewerApp:
         self.pdf_path = None
         self.pdf_images = []
         self.pdf_document = None
-        self.zoom_factor = 1.0
 
         self.left_button = tk.Button(root, text="Previous Page", command=self.previous_page)
         self.left_button.pack(side=tk.LEFT)
 
         self.right_button = tk.Button(root, text="Next Page", command=self.next_page)
         self.right_button.pack(side=tk.RIGHT)
-
-        self.zoom_in_button = tk.Button(root, text="Zoom In", command=self.zoom_in)
-        self.zoom_in_button.pack()
-
-        self.zoom_out_button = tk.Button(root, text="Zoom Out", command=self.zoom_out)
-        self.zoom_out_button.pack()
 
     def load_pdf(self):
         file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
@@ -51,7 +44,7 @@ class PDFViewerApp:
     def convert_pdf_to_images(self):
         images = []
         for page in self.pdf_document:
-            pix = page.get_pixmap(matrix=fitz.Matrix(self.zoom_factor, self.zoom_factor))
+            pix = page.get_pixmap()
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
             images.append(img)
         return images
@@ -75,9 +68,11 @@ class PDFViewerApp:
             page = self.pdf_document[page_num]
             for block in page.get_text("blocks"):
                 for line in block:
-                    x0, y0, x1, y1, text = line[:5]
-                    x0, y0, x1, y1 = x0 * self.zoom_factor + offset[0], y0 * self.zoom_factor + offset[1], x1 * self.zoom_factor + offset[0], y1 * self.zoom_factor + offset[1]
-                    self.pdf_canvas.create_text(x0, y0, text=text, anchor=tk.NW)
+                    for span in line:
+                        text = span[4]
+                        x0, y0, x1, y1 = span[:4]
+                        x0, y0, x1, y1 = x0 + offset[0], y0 + offset[1], x1 + offset[0], y1 + offset[1]
+                        self.pdf_canvas.create_text(x0, y0, text=text, anchor=tk.NW)
 
     def resize_image(self, img, size):
         return ImageTk.PhotoImage(img.resize(size, Image.ANTIALIAS))
@@ -93,18 +88,6 @@ class PDFViewerApp:
     def next_page(self):
         if self.current_page < len(self.pdf_images) - 1:
             self.current_page += 1
-            self.show_page()
-
-    def zoom_in(self):
-        if self.zoom_factor < 3.0:  # Limit the maximum zoom
-            self.zoom_factor *= 1.1
-            self.pdf_images = self.convert_pdf_to_images()
-            self.show_page()
-
-    def zoom_out(self):
-        if self.zoom_factor > 0.5:  # Limit the minimum zoom
-            self.zoom_factor *= 0.9
-            self.pdf_images = self.convert_pdf_to_images()
             self.show_page()
 
 if __name__ == "__main__":
