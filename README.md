@@ -13,7 +13,7 @@ from PIL import Image, ImageTk
 ```
 
 
-# The Interface
+# The User Interface
 
 ![pdfviewer](https://github.com/UKVeteran/PDF-Viewer/assets/39216339/29efb9f8-70c2-4336-86d9-0019fcfb3fd8)
 
